@@ -57,3 +57,9 @@ http_client:
 			headers:
 				"authorization": "%env(BEEY_TRANSCRIBER_KEY)%"
 ```
+
+Přidat do `services.yaml`
+```yaml
+services:
+	TadyEu\BeeyTranscriber\BeeyTranscriber: ~
+```
