@@ -30,6 +30,18 @@ public function ControllerMethod(BeeyTranscriber $beeyTranscriber){
 ```
 
 ## Instalace
+
+Přidat do composer.json
+```json
+"repositories": [
+	{
+		"type": "vcs",
+		"url": "https://github.com/tady-eu/beey-transcribe-symfony.git"
+	}
+]
+```
+Nainstalovat pomocí `composer require tadyeu/beey-transcriber:^1.0`
+
 Dopnit proměnné do .env.local souboru
 ```env
 BEEY_TRANSCRIBER_URI="http://FILL_ME/XAPI/v2/"
