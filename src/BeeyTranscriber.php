@@ -242,8 +242,6 @@ class BeeyTranscriber
             // Recognize speakers or not
             'WithDiarization' => 'true',
             'DiarizationProfile' => null,
-            // Format time data and capitalize words
-            'WithPPC' => 'true',
             'TranscriptionProfile' => null,
             // Use replacement rules
             'WithUserLex' => 'true',
