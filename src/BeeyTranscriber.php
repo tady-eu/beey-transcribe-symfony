@@ -7,6 +7,8 @@ use TadyEu\BeeyTranscriber\Dto\Project;
 use DateTime;
 use DateTimeInterface;
 use Exception;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\Response\StreamWrapper;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use function array_filter;
 use function array_merge;
@@ -157,6 +159,58 @@ class BeeyTranscriber
             if ($handle !== null && is_resource($handle)) {
                 fclose($handle);
             }
+        }
+    }
+
+    /**
+     * Uploads a media file to a project by streaming it directly from an HTTP/HTTPS URL.
+     *
+     * The file is not stored on disk — data is streamed chunk by chunk from the source
+     * URL directly into the Beey API upload request.
+     *
+     * The source server must include a Content-Length header in its response,
+     * as the Beey API requires the file size upfront.
+     *
+     * @param int    $projectId Project ID
+     * @param string $url       Publicly accessible HTTP/HTTPS URL of the media file
+     *
+     * @throws BeeyException
+     * @return void
+     */
+    public function uploadMediaFileFromUrl(int $projectId, string $url): void
+    {
+        $externalClient = HttpClient::create();
+
+        try {
+            $downloadResponse = $externalClient->request('GET', $url);
+
+            if ($downloadResponse->getStatusCode() !== 200) {
+                throw new Exception('Failed to download file from URL, status: ' . $downloadResponse->getStatusCode());
+            }
+
+            $headers = $downloadResponse->getHeaders();
+            if (!isset($headers['content-length'][0])) {
+                throw new Exception('Source server did not provide a Content-Length header, cannot determine file size');
+            }
+
+            $fileSize = (int) $headers['content-length'][0];
+
+            $uploadResponse = $this->beeyTranscriber->request(
+                'POST', 'projects/' . $projectId . '/files/uploadmediafile', [
+                'query' => [
+                    'FileSize' => $fileSize,
+                ],
+                'body' => [
+                    'File' => StreamWrapper::createResource($downloadResponse, $externalClient),
+                ],
+                ]
+            );
+
+            if ($uploadResponse->getStatusCode() !== 200) {
+                throw new Exception('Returned status code ' . $uploadResponse->getStatusCode());
+            }
+        } catch (Exception $e) {
+            throw new BeeyException('Error uploading media file from URL to project ' . $projectId . ': ' . $e->getMessage());
         }
     }
 
